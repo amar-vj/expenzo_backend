@@ -1,26 +1,36 @@
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import mysql.connector
 import bcrypt
-import getpass
+import os
 
 app = FastAPI(title="Expenzo API")
 
 
 # =========================
 # MYSQL CONNECTION
+#
+# Reads credentials from environment variables (set these in
+# Render's "Environment" tab). Falls back to local defaults
+# so you can still run this on your own computer against a
+# local MySQL server without setting anything.
 # =========================
 
-MYSQL_PASSWORD = getpass.getpass("Enter MySQL password: ")
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = int(os.environ.get("DB_PORT", "3306"))
+DB_NAME = os.environ.get("DB_NAME", "expense_analytics")
+DB_USER = os.environ.get("DB_USER", "root")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=MYSQL_PASSWORD,
-        database="expense_analytics"
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        ssl_disabled=False  # Aiven requires SSL
     )
 
 
@@ -416,4 +426,3 @@ def delete_expense(expense_id: int):
     finally:
         cursor.close()
         connection.close()
-
